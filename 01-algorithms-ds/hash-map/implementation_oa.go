@@ -95,8 +95,8 @@ func (h *HashOpenAddressing) Get(key string) (any, bool) {
 func (h *HashOpenAddressing) hashFunc(key string) int {
 	primeNum := 10000007
 	sum := 0
-	for char := range key {
-		sum = (sum + char*primeNum%h.cap) % h.cap
+	for _, char := range key {
+		sum = (sum + int(char)*primeNum%h.cap) % h.cap
 	}
 	return sum % h.cap
 }
