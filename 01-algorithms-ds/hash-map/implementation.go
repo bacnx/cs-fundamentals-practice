@@ -6,20 +6,6 @@ type linkedList struct {
 	value any
 }
 
-func (l *linkedList) Value() (string, any, bool) {
-	if l != nil {
-		return l.key, l.value, true
-	}
-	return "", nil, false
-}
-
-func (l *linkedList) Next() (*linkedList, bool) {
-	if l != nil {
-		return l.next, true
-	}
-	return nil, false
-}
-
 // return new pointer of appended linkedList and a bool for increase list or just replace
 func (l *linkedList) Append(key string, value any) (*linkedList, bool) {
 	if l == nil {
@@ -66,8 +52,8 @@ func NewHash(cap int) Hash {
 func (h *Hash) hashFunc(key string) int {
 	const prime = 10000007
 	sum := 0
-	for char := range key {
-		sum = (sum + char*prime) % h.cap
+	for _, char := range key {
+		sum = (sum + int(char)*prime) % h.cap
 	}
 	return sum % h.cap
 }
