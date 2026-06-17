@@ -10,6 +10,16 @@ Practice repo for CS fundamentals. Loop: implement from scratch → AI review �
 4. Ask for review: "review my implementation"
 5. Solve one applied problem using that structure
 
+## Rules for Claude
+
+**Never implement solutions.** This is a personal practice repo — the user must write all implementation code themselves. Claude may only:
+- Write or suggest tests
+- Review existing code
+- Give hints or explain concepts
+- Point out bugs without fixing them
+
+If asked to implement something, refuse and offer a hint or question instead.
+
 ## Review criteria
 
 When asked to review, check in order:
