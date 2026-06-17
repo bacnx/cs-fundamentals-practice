@@ -1,6 +1,9 @@
 package hashmap
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 func TestGetMissingKey(t *testing.T) {
 	h := NewHash(16)
@@ -80,5 +83,64 @@ func TestMultipleKeys(t *testing.T) {
 		if !ok || got != want {
 			t.Fatalf("key %q: expected %d got %v", k, want, got)
 		}
+	}
+}
+
+// Level 2 — Load factor and auto-resize
+
+func TestResizeKeepsAllKeys(t *testing.T) {
+	h := NewHash(4) // resize triggers at 75% of cap=4, i.e. after 3 inserts
+	keys := []string{"a", "b", "c", "d", "e", "f"}
+	for i, k := range keys {
+		h.Put(k, i)
+	}
+	for i, k := range keys {
+		got, ok := h.Get(k)
+		if !ok || got != i {
+			t.Fatalf("after resize: key %q expected %d got %v (ok=%v)", k, i, got, ok)
+		}
+	}
+}
+
+func TestMultipleResizesKeepAllKeys(t *testing.T) {
+	h := NewHash(4)
+	n := 100
+	for i := 0; i < n; i++ {
+		h.Put(fmt.Sprintf("%d", i), i)
+	}
+	for i := 0; i < n; i++ {
+		key := fmt.Sprintf("%d", i)
+		got, ok := h.Get(key)
+		if !ok || got != i {
+			t.Fatalf("key %q: expected %d got %v (ok=%v)", key, i, got, ok)
+		}
+	}
+}
+
+func TestLenAccurateAfterUpdate(t *testing.T) {
+	h := NewHash(16)
+	h.Put("a", 1)
+	h.Put("a", 2) // update, not a new key
+	if got := h.Len(); got != 1 {
+		t.Fatalf("Len should be 1 after updating same key, got %d", got)
+	}
+}
+
+func TestLenDecreasesOnDelete(t *testing.T) {
+	h := NewHash(16)
+	h.Put("a", 1)
+	h.Put("b", 2)
+	h.Delete("a")
+	if got := h.Len(); got != 1 {
+		t.Fatalf("Len should be 1 after deleting one key, got %d", got)
+	}
+}
+
+func TestLenUnchangedWhenDeletingMissingKey(t *testing.T) {
+	h := NewHash(16)
+	h.Put("a", 1)
+	h.Delete("nonexistent")
+	if got := h.Len(); got != 1 {
+		t.Fatalf("Len should remain 1 after deleting nonexistent key, got %d", got)
 	}
 }

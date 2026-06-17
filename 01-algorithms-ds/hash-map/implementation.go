@@ -6,14 +6,6 @@ type linkedList struct {
 	value any
 }
 
-func newLinkedList(key string, value any) *linkedList {
-	return &linkedList{
-		next:  nil,
-		key:   key,
-		value: value,
-	}
-}
-
 func (l *linkedList) Value() (string, any, bool) {
 	if l != nil {
 		return l.key, l.value, true
@@ -28,26 +20,33 @@ func (l *linkedList) Next() (*linkedList, bool) {
 	return nil, false
 }
 
-func (l *linkedList) Append(key string, value any) *linkedList {
-	if l != nil {
-		l.next = l.next.Append(key, value)
-	} else {
-		l = &linkedList{key: key, value: value}
+// return new pointer of appended linkedList and a bool for increase list or just replace
+func (l *linkedList) Append(key string, value any) (*linkedList, bool) {
+	if l == nil {
+		return &linkedList{key: key, value: value}, true
 	}
-	return l
+
+	var isIncrease bool
+	if l.key == key {
+		l.value = value
+	} else {
+		l.next, isIncrease = l.next.Append(key, value)
+	}
+	return l, isIncrease
 }
 
-func (l *linkedList) Delete(key string) *linkedList {
+// Delete return new linkedList pointer and decrease item or not
+func (l *linkedList) Delete(key string) (*linkedList, bool) {
 	if l == nil {
-		return l
+		return l, false
 	}
 	if l.key == key {
-		return l.next
+		return l.next, true
+	} else {
+		var isDecrease bool
+		l.next, isDecrease = l.next.Delete(key)
+		return l, isDecrease
 	}
-	if next, ok := l.Next(); ok && next.key == key {
-		l.next = next.next
-	}
-	return l
 }
 
 type Hash struct {
@@ -73,18 +72,19 @@ func (h *Hash) hashFunc(key string) int {
 	return sum % h.cap
 }
 
+func (h *Hash) Len() int {
+	return h.len
+}
+
 func (h *Hash) Put(key string, value any) {
 	hashedKey := h.hashFunc(key)
-	if h.sli[hashedKey] == nil {
-		h.sli[hashedKey] = newLinkedList(key, value)
-	} else {
-		if h.sli[hashedKey].key == key {
-			h.sli[hashedKey].value = value
-		} else {
-			h.sli[hashedKey].Append(key, value)
-		}
+	var isIncrease bool
+	h.sli[hashedKey], isIncrease = h.sli[hashedKey].Append(key, value)
+	if isIncrease {
+		h.len++
 	}
-	h.len++
+
+	h.loadFactorAndResize()
 }
 
 func (h *Hash) Get(key string) (any, bool) {
@@ -101,6 +101,30 @@ func (h *Hash) Get(key string) (any, bool) {
 
 func (h *Hash) Delete(key string) {
 	hashedKey := h.hashFunc(key)
-	h.sli[hashedKey] = h.sli[hashedKey].Delete(key)
-	h.len--
+	var isDecrease bool
+	h.sli[hashedKey], isDecrease = h.sli[hashedKey].Delete(key)
+	if isDecrease {
+		h.len--
+	}
+}
+
+func (h *Hash) loadFactorAndResize() {
+	loadFactorPct := 100 * h.len / h.cap
+
+	if loadFactorPct >= 75 {
+		h.resize(h.cap * 2)
+	}
+}
+
+func (h *Hash) resize(newCap int) {
+	currentSli := h.sli
+	h.sli = make([]*linkedList, newCap)
+	h.cap = newCap
+	h.len = 0
+
+	for _, head := range currentSli {
+		for ; head != nil; head = head.next {
+			h.Put(head.key, head.value)
+		}
+	}
 }
