@@ -42,6 +42,9 @@ type Hash struct {
 }
 
 func NewHash(cap int) Hash {
+	if cap == 0 {
+		cap = 1
+	}
 	return Hash{
 		sli: make([]*linkedList, cap),
 		cap: cap,

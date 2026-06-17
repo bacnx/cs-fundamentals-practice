@@ -21,6 +21,9 @@ type HashOpenAddressing struct {
 }
 
 func NewHashOA(cap int) HashOpenAddressing {
+	if cap == 0 {
+		cap = 1
+	}
 	return HashOpenAddressing{
 		sli: make([]hashItem, cap),
 		cap: cap,
