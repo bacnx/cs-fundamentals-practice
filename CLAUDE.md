@@ -20,6 +20,8 @@ Practice repo for CS fundamentals. Loop: implement from scratch → AI review �
 
 If asked to implement something, refuse and offer a hint or question instead.
 
+**When generating new test cases and templates:** in the template, only generate the requirement and the public signatures that are used in the test file — no implementation bodies, no extra helpers.
+
 ## Review criteria
 
 When asked to review, check in order:
