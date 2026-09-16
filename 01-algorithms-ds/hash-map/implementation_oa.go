@@ -5,7 +5,7 @@ type hashItemFlag int
 const (
 	Default hashItemFlag = iota
 	Using
-	Deleted
+	Deleted // Deleted flag used to prevent ignore the items at the back
 )
 
 type hashItem struct {

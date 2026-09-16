@@ -73,7 +73,9 @@ func (h *Hash) Put(key string, value any) {
 		h.len++
 	}
 
-	h.loadFactorAndResize()
+	if h.LoadFactor() >= 0.75 {
+		h.resize(h.cap * 2)
+	}
 }
 
 func (h *Hash) Get(key string) (any, bool) {
@@ -97,12 +99,11 @@ func (h *Hash) Delete(key string) {
 	}
 }
 
-func (h *Hash) loadFactorAndResize() {
-	loadFactorPct := 100 * h.len / h.cap
-
-	if loadFactorPct >= 75 {
-		h.resize(h.cap * 2)
+func (h *Hash) LoadFactor() float64 {
+	if h.cap == 0 {
+		return 0.0
 	}
+	return float64(h.len) / float64(h.cap)
 }
 
 func (h *Hash) resize(newCap int) {

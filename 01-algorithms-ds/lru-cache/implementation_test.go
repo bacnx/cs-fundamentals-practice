@@ -150,3 +150,20 @@ func TestReinsertEvictedKey(t *testing.T) {
 		t.Fatalf("Len=%d want 2", c.Len())
 	}
 }
+
+func TestMinIntKeyDoesNotPanic(t *testing.T) {
+	c := NewLRU(3)
+	// math.MinInt has no positive equivalent in two's complement.
+	// This will panic if the hash function incorrectly assumes `key * -1` or `-key`
+	// will always yield a positive number.
+	const minInt = -9223372036854775808
+	
+	// Test should not panic
+	c.Put(minInt, 100)
+	
+	v, ok := c.Get(minInt)
+	if !ok || v != 100 {
+		t.Fatalf("expected 100 for minInt key, got %v (ok=%v)", v, ok)
+	}
+}
+

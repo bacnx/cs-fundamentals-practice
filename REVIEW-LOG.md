@@ -73,3 +73,17 @@ These were found and fixed before this log existed. Kept because the lesson outl
   heavily and is unstable under multi-byte input. FIXED.
 - **Both constructors accepted capacity 0** (commit `5d7ccca`), which makes every `% cap` a
   division by zero. FIXED.
+
+## 2026-09-16 — hash-map (open addressing)
+
+### CLOSED — `hash-map`: Level 3 checklist item not done
+
+The missing explanation for tombstones was added. The comment correctly identifies that without it, the probe loop would terminate early and "ignore the items at the back".
+
+### CLOSED — `hash-map`: Level 2 is missing the `LoadFactor()` accessor
+
+The `LoadFactor() float64` method has been added and correctly implements `float64(len) / float64(cap)`. The missing tests have been added to verify that the load factor calculates correctly and properly triggers the resize logic.
+
+### CLOSED — `lru-cache`: panic on a negative key
+
+Fixed. Go's `%` preserves the sign, and `math.MinInt * -1` overflows and stays negative. The hash function now correctly applies the modulo *before* flipping the sign (and re-hashing), guaranteeing a positive index regardless of two's complement integer overflow.

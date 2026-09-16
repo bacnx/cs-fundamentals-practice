@@ -170,6 +170,10 @@ func (l *LRU) Len() int {
 
 func (l *LRU) hash(key int) int {
 	prime := 100007
+	key = key * prime % l.capacity
+	if key < 0 {
+		key = -key
+	}
 	return key * prime % l.capacity
 }
 

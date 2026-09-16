@@ -144,3 +144,37 @@ func TestLenUnchangedWhenDeletingMissingKey(t *testing.T) {
 		t.Fatalf("Len should remain 1 after deleting nonexistent key, got %d", got)
 	}
 }
+
+func TestLoadFactorIsZeroInitially(t *testing.T) {
+	h := NewHash(4)
+	if got := h.LoadFactor(); got != 0.0 {
+		t.Fatalf("Load factor should be 0.0 on an empty map, got %f", got)
+	}
+}
+
+func TestLoadFactorIncreases(t *testing.T) {
+	h := NewHash(4)
+	h.Put("a", 1)
+	if got := h.LoadFactor(); got != 0.25 {
+		t.Fatalf("Load factor should be 0.25 after 1 insert in cap 4, got %f", got)
+	}
+	
+	h.Put("b", 2)
+	if got := h.LoadFactor(); got != 0.5 {
+		t.Fatalf("Load factor should be 0.5 after 2 inserts in cap 4, got %f", got)
+	}
+}
+
+func TestLoadFactorDropsAfterResize(t *testing.T) {
+	h := NewHash(4)
+	h.Put("a", 1)
+	h.Put("b", 2)
+	h.Put("c", 3)
+	h.Put("d", 4) // This should definitely trigger a resize to cap 8
+	
+	// After resize, capacity is 8, items are 4 -> load factor 0.5
+	if got := h.LoadFactor(); got >= 0.75 {
+		t.Fatalf("Load factor should drop below 0.75 after a resize, got %f", got)
+	}
+}
+
