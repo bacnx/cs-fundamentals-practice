@@ -81,15 +81,15 @@ cache.Get(2)          // → 0, false
 
 ## Verification checklist
 
-- [x] Get on an empty cache returns `false`
-- [x] Put then Get returns the correct value
-- [x] Len never exceeds capacity
-- [x] Eviction removes the least recently used entry, not the oldest inserted
-- [x] Get refreshes recency; Put on an existing key refreshes recency
-- [x] capacity == 1 works
-- [x] Re-inserting an evicted key works
-- [ ] **Negative keys work** — currently panics, see `REVIEW-LOG.md`
-- [ ] **Bucket array is actually used as sized** — currently it is not, see `REVIEW-LOG.md`
+- [ ] Get on an empty cache returns `false`
+- [ ] Put then Get returns the correct value
+- [ ] Len never exceeds capacity
+- [ ] Eviction removes the least recently used entry, not the oldest inserted
+- [ ] Get refreshes recency; Put on an existing key refreshes recency
+- [ ] capacity == 1 works
+- [ ] Re-inserting an evicted key works
+- [ ] Negative keys work, including `math.MinInt`
+- [ ] Key `0` works (put, update, miss after eviction)
 
 ## Hint
 

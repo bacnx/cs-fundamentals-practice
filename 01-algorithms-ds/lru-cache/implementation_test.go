@@ -157,13 +157,51 @@ func TestMinIntKeyDoesNotPanic(t *testing.T) {
 	// This will panic if the hash function incorrectly assumes `key * -1` or `-key`
 	// will always yield a positive number.
 	const minInt = -9223372036854775808
-	
+
 	// Test should not panic
 	c.Put(minInt, 100)
-	
+
 	v, ok := c.Get(minInt)
 	if !ok || v != 100 {
 		t.Fatalf("expected 100 for minInt key, got %v (ok=%v)", v, ok)
 	}
 }
 
+// Key 0 is the zero value of int. Any internal node whose key field is never
+// set also has key 0, so key 0 must not be confused with such a node.
+func TestZeroKeyPutThenGet(t *testing.T) {
+	c := NewLRU(2)
+	c.Put(0, 100)
+	v, ok := c.Get(0)
+	if !ok || v != 100 {
+		t.Fatalf("expected 100 for key 0, got %v (ok=%v)", v, ok)
+	}
+	if c.Len() != 1 {
+		t.Fatalf("Len=%d want 1", c.Len())
+	}
+}
+
+func TestZeroKeyUpdate(t *testing.T) {
+	c := NewLRU(2)
+	c.Put(0, 100)
+	c.Put(0, 200)
+	v, ok := c.Get(0)
+	if !ok || v != 200 {
+		t.Fatalf("expected updated value 200 for key 0, got %v (ok=%v)", v, ok)
+	}
+	if c.Len() != 1 {
+		t.Fatalf("update must not grow size, Len=%d want 1", c.Len())
+	}
+}
+
+func TestZeroKeyMissAfterEviction(t *testing.T) {
+	c := NewLRU(1)
+	c.Put(0, 100)
+	c.Put(1, 1) // evicts key 0; whatever held key 0 before may still exist
+	if _, ok := c.Get(0); ok {
+		t.Fatal("expected miss for evicted key 0")
+	}
+	if c.Len() != 1 {
+		t.Fatalf("Len=%d want 1", c.Len())
+	}
+}

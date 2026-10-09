@@ -6,10 +6,9 @@ Single source of truth for **practice status**. No theory here — theory lives 
 
 ## Next
 
-**Close the open items on what is already built, then start `rate-limiter`.**
-Four things are open — see `REVIEW-LOG.md`: the missing tombstone explanation in the
-open-addressing map, the `LoadFactor()` accessor Level 2 requires but does not have, and two
-defects in the LRU cache (panic on negative keys, two thirds of the bucket array unreachable).
+**Redo `lru-cache` from scratch, then start `rate-limiter`.**
+The first LRU implementation was cleared on 2026-10-09 so it can be rewritten; the test suite
+(including the negative-key and key-0 cases found in review) stays. See `REVIEW-LOG.md`.
 
 ## Legend
 
@@ -56,7 +55,7 @@ Each one combines a core structure with extra logic, and each mirrors a real sys
 
 | Module | Problem | Needs | Status |
 |---|---|---|---|
-| `lru-cache` | LRU cache, O(1) `Get` and `Put` | hash map + doubly linked list | ⚠️ |
+| `lru-cache` | LRU cache, O(1) `Get` and `Put` | hash map + doubly linked list | 🔜 — redo |
 | `rate-limiter` | Sliding-window rate limiter | hash map | 🔜 |
 | `ttl-store` | In-memory KV store with TTL | hash map (+ a second structure for efficient expiry) | 🔜 |
 | `word-frequency` | Streaming word counts + `TopK` | hash map + **heap** | 🔜 — blocked on `heap` |

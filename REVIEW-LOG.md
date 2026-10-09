@@ -87,3 +87,24 @@ The `LoadFactor() float64` method has been added and correctly implements `float
 ### CLOSED — `lru-cache`: panic on a negative key
 
 Fixed. Go's `%` preserves the sign, and `math.MinInt * -1` overflows and stays negative. The hash function now correctly applies the modulo *before* flipping the sign (and re-hashing), guaranteeing a positive index regardless of two's complement integer overflow.
+
+## 2026-10-09 — lru-cache reset
+
+The user cleared the implementation to redo it from scratch. `implementation.go` is back to a
+signatures-only template; the test suite is kept.
+
+### WITHDRAWN — `lru-cache`: two thirds of the bucket array is unreachable
+
+The code it describes no longer exists. `TestBucketArrayUtilization` was removed with it: it
+read the old design's private `sli` field, so it cannot compile against a fresh design. The
+lesson stands — a comment stating an intent is not evidence the code implements it.
+
+### CLOSED BY RESET — `lru-cache`: key 0 panics
+
+Found before the reset: `NewLRU(1).Put(0, 7)` panicked with a nil pointer dereference. The
+bucket search started at the sentinel head node, whose `key` field is the zero value `0`, so
+key 0 matched the sentinel instead of a real entry. The three `TestZeroKey*` tests stay in the
+suite so the rewrite is checked against it.
+
+Promoted to second-brain: no — candidate: a sentinel node's zero-valued fields are real
+values to any code that reads them; a search loop must skip sentinels, not trust their data.
