@@ -108,3 +108,53 @@ suite so the rewrite is checked against it.
 
 Promoted to second-brain: no — candidate: a sentinel node's zero-valued fields are real
 values to any code that reads them; a search loop must skip sentinels, not trust their data.
+
+## 2026-10-12 — lru-cache redo (with sub-module tests)
+
+Reviewed after the sub-module tests (`hash-map_test.go`, `linked-list_test.go`,
+`lru-list_test.go`) were added. Four tests fail, from two root causes. Bugs already fixed
+before this review (inverted duplicate check in `HashMap.Put`, `PutTail` reading
+`tail.next`, `FindNodeByKey` skipping the last node, `Del` not decrementing `len`) are not
+listed.
+
+### OPEN — `lru-cache`: `UpdateToHead` leaves the hash node pointing at a detached node
+
+Reproduced: `c := NewLRU(2); c.Put(1, 1); c.Get(1); c.Get(1)` — the second `Get` returns
+`false`. `UpdateToHead` removes the node and pushes a *new* node at the head, but the hash
+node's `relativeNode` still points at the old, detached one. Invariant 3 breaks after the
+first `Get`. Fails `TestGetRefreshesRecency` and
+`TestLRUListUpdateToHeadKeepsNodeHandleValid`.
+
+Promoted to second-brain: no — candidate: when two structures hold pointers to each other's
+nodes, "move" must keep node identity; delete-and-recreate silently invalidates every
+outside pointer.
+
+### OPEN — `lru-cache`: `LRUList.Remove(nil)` and `UpdateToHead(nil)` panic
+
+Both read `n.nodeType` before checking for `nil`. `HashMap.RemoveNode` and
+`LinkedList.RemoveNode` already return an error for `nil`, so the convention is inconsistent.
+
+Promoted to second-brain: no.
+
+### OPEN — `lru-cache`: hash sends every key to one bucket for some capacities
+
+`generateBucketKey` returns `(…) * 100005 % cap`. 100005 = 3 · 5 · 6667, so when `cap` shares
+a factor with it the result is always a multiple of that factor: capacity 3, 5 or 15 uses
+only bucket 0, capacity 10 uses only buckets 0 and 5. Every `Get` and `Put` then scans one
+chain of length n — O(n), against an O(1) target. No test catches it because results stay
+correct. Separately, `k`, `-k` and `k + 100005` always collide, so an adversary can force a
+single long chain at any capacity.
+
+Promoted to second-brain: no — candidate: `x * m % n` only spreads keys over all `n` slots
+when `gcd(m, n) = 1`; a multiplier that is not coprime with the table size wastes buckets.
+
+### Status update, same day
+
+- **`UpdateToHead` stale pointer — PARTLY FIXED.** `UpdateToHead` now repairs the partner
+  hash node (`newNode.relativeNode.relativeNode = newNode`), so every `LRU` test passes. Still
+  open: it dereferences `relativeNode` without a nil check (`NewLRUList().PutHead(1, 10, nil)`
+  then `UpdateToHead` panics), and the handle passed in is still detached afterwards. Pending
+  the user's choice of contract: keep node identity, or "replace + repair partner" (then the
+  `LRUList` tests are rewritten to match).
+- **`Remove(nil)` / `UpdateToHead(nil)` panic — FIXED.** Both check `nil` first.
+- **Hash uses one bucket for capacity 3, 5, 15 — OPEN.** Unchanged, still untested.
