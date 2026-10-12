@@ -8,6 +8,7 @@ type node struct {
 	next         *node
 	prev         *node
 	relativeNode *node
+	nodeType     string
 }
 
 type LinkedList struct {
@@ -24,26 +25,40 @@ func NewLinkedList() *LinkedList {
 	return l
 }
 
-func (l *LinkedList) PutHead(key int, val int, relNode *node) {
+func (l *LinkedList) PutHead(key int, val int, relNode *node, nodeType string) *node {
 	second := l.head.next // the node after new node
-	newNode := &node{key: key, value: val, relativeNode: relNode}
+	newNode := &node{
+		key:          key,
+		value:        val,
+		relativeNode: relNode,
+		nodeType:     nodeType,
+	}
 
 	l.head.next = newNode
 	newNode.prev = l.head
 
 	newNode.next = second
 	second.prev = newNode
+
+	return newNode
 }
 
-func (l *LinkedList) PutTail(key int, val int, relativeNode *node) {
-	first := l.tail.next // the node before new node
-	newNode := &node{key: key, value: val, relativeNode: relativeNode}
+func (l *LinkedList) PutTail(key int, val int, relativeNode *node, nodeType string) *node {
+	first := l.tail.prev // the node before new node
+	newNode := &node{
+		key:          key,
+		value:        val,
+		relativeNode: relativeNode,
+		nodeType:     nodeType,
+	}
 
 	first.next = newNode
 	newNode.prev = first
 
 	newNode.next = l.tail
 	l.tail.prev = newNode
+
+	return newNode
 }
 
 func (l *LinkedList) FindNodeByKey(key int) *node {
@@ -52,7 +67,7 @@ func (l *LinkedList) FindNodeByKey(key int) *node {
 	}
 
 	n := l.head.next
-	for n.next != nil && n.next != l.tail {
+	for n != nil && n != l.tail {
 		if n.key == key {
 			return n
 		}
@@ -60,6 +75,13 @@ func (l *LinkedList) FindNodeByKey(key int) *node {
 		n = n.next
 	}
 	return nil
+}
+
+func (l *LinkedList) GetHead() *node {
+	if l.head.next == l.tail {
+		return nil
+	}
+	return l.head.next
 }
 
 func (l *LinkedList) GetTail() *node {

@@ -2,11 +2,15 @@ package lru
 
 import "fmt"
 
+const _MOD = 100005
+
 type HashMap struct {
 	cap     int
 	len     int
 	buckets []*LinkedList
 }
+
+const HASH_NODE_TYPE = "hash-node"
 
 func NewHashMap(cap int) *HashMap {
 	buckets := make([]*LinkedList, cap)
@@ -21,27 +25,27 @@ func NewHashMap(cap int) *HashMap {
 	}
 }
 
-func (h *HashMap) Put(key int, value int, relNode *node) error {
-	if _, err := h.Get(key); err != nil {
-		return fmt.Errorf("this key already existed")
+func (h *HashMap) Put(key int, value int, relNode *node) (*node, error) {
+	if _, err := h.Get(key); err == nil {
+		return nil, fmt.Errorf("this key already existed")
 	}
 	if h.len >= h.cap {
-		return fmt.Errorf("len is equal or lager cap")
+		return nil, fmt.Errorf("len is equal or lager than cap")
 	}
 
 	bucketKey := h.generateBucketKey(key)
-	h.buckets[bucketKey].PutTail(key, value, relNode)
+	n := h.buckets[bucketKey].PutTail(key, value, relNode, HASH_NODE_TYPE)
 	h.len++
-	return nil
+	return n, nil
 }
 
-func (h *HashMap) Get(key int) (int, error) {
+func (h *HashMap) Get(key int) (*node, error) {
 	bucketKey := h.generateBucketKey(key)
 	n := h.buckets[bucketKey].FindNodeByKey(key)
 	if n == nil {
-		return 0, fmt.Errorf("key %v is not exist", key)
+		return nil, fmt.Errorf("key %v is not exist", key)
 	}
-	return n.value, nil
+	return n, nil
 }
 
 func (h *HashMap) Del(key int) error {
@@ -54,7 +58,25 @@ func (h *HashMap) Del(key int) error {
 	if err := h.buckets[bucketKey].RemoveNode(n); err != nil {
 		return err
 	}
+	h.len--
 
+	return nil
+}
+
+func (h *HashMap) RemoveNode(n *node) error {
+	if n == nil {
+		return fmt.Errorf("node is nil")
+	}
+	if n.nodeType != HASH_NODE_TYPE {
+		return fmt.Errorf("the node type is not correct")
+	}
+
+	bucketKey := h.generateBucketKey(n.key)
+	err := h.buckets[bucketKey].RemoveNode(n)
+	if err != nil {
+		return err
+	}
+	h.len--
 	return nil
 }
 
@@ -65,5 +87,5 @@ func (h *HashMap) generateBucketKey(key int) int {
 	if key < 0 {
 		key = -key
 	}
-	return (key + 100005) * 100005 % h.cap
+	return (key%_MOD + _MOD) * _MOD % h.cap
 }
